@@ -1,1 +1,1 @@
-export { default as PhotoBooth } from './Photobooth';
+export { default as PhotoBooth } from './PhotoBooth';
