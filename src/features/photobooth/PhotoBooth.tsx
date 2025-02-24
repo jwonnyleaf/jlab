@@ -36,8 +36,24 @@ const PhotoBooth: React.FC = () => {
     }
   };
 
+  const requestCameraPermission = async () => {
+    try {
+      // Request permissions explicitly before accessing the camera
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log('Camera permission granted!');
+      return true;
+    } catch (error) {
+      console.error('Camera permission denied:', error);
+      alert('Please allow camera access to use the photo booth.');
+      return false;
+    }
+  };
+
   const startCamera = async (deviceId?: string) => {
     try {
+      const hasPermission = await requestCameraPermission();
+      if (!hasPermission) return;
+
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach((track) => track.stop());
