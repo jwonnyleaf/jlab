@@ -21,6 +21,22 @@ const PhotoBooth: React.FC = () => {
     }
   }, [photos, navigate]);
 
+  useEffect(() => {
+    requestCameraPermission().then((granted) => {
+      if (granted) {
+        getCameras();
+        navigator.mediaDevices.addEventListener('devicechange', getCameras);
+        if (selectedCamera) {
+          startCamera(selectedCamera); // ✅ Ensure camera starts immediately
+        }
+      }
+    });
+
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', getCameras);
+    };
+  }, [selectedCamera]);
+
   const getCameras = async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -85,20 +101,6 @@ const PhotoBooth: React.FC = () => {
       console.error('Error accessing camera:', error);
     }
   };
-
-  useEffect(() => {
-    getCameras();
-    navigator.mediaDevices.addEventListener('devicechange', getCameras);
-    return () => {
-      navigator.mediaDevices.removeEventListener('devicechange', getCameras);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedCamera) {
-      startCamera(selectedCamera);
-    }
-  }, [selectedCamera]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) {
