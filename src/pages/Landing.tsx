@@ -12,7 +12,7 @@ const Landing = () => {
       >
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-2/3 z-10 pointer-events-none">
           <img
-            src="/src/assets/landingDoodle.png"
+            src="/static/images/landingDoodle.png"
             className="w-[clamp(400px,98vw,1400px)] object-contain"
           />
         </div>
