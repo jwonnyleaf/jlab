@@ -1,8 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Fjalla+One&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 @import 'tailwindcss';
 
 @theme {
+  --font-fjalla: 'Fjalla One', sans-serif;
+  --font-libre: 'Libre Baskerville', serif;
   --color-raisinblack: #1e212b;
   --color-powder: #fdfffc;
+  --color-pink: #ffe4dc;
+  --color-burple: #a2a4ef;
 }
 
 :root {
@@ -38,7 +43,6 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -48,11 +52,13 @@ h1 {
   line-height: 1.1;
 }
 
+.custom-shadow {
+  border-radius: 54px;
+  background: #1e212b;
+  box-shadow: 10px 10px 20px #14161d, -10px -10px 20px #282c39 !important;
+}
+
 button {
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
   cursor: pointer;
 }
 

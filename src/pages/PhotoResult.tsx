@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { PHOTO_COUNT } from '../config/photoBoothConfig';
 
 const PhotoResult: React.FC = () => {
   const location = useLocation();
@@ -11,7 +12,7 @@ const PhotoResult: React.FC = () => {
   const photos: string[] = location.state?.photos || [];
 
   useEffect(() => {
-    if (photos.length !== 3) {
+    if (photos.length !== PHOTO_COUNT) {
       navigate('/'); // Redirect if no valid photos
       return;
     }
@@ -25,10 +26,8 @@ const PhotoResult: React.FC = () => {
 
       const finalWidth = 1080;
       const finalHeight = 1920;
-      const edgePadding = 40;
+      const edgePadding = 80;
       const imageGap = 20;
-      const singleImageHeight =
-        (finalHeight - edgePadding * 2 - imageGap * 2) / 3;
 
       canvas.width = finalWidth;
       canvas.height = finalHeight;
@@ -46,11 +45,15 @@ const PhotoResult: React.FC = () => {
         })
       );
 
+      const startY = edgePadding - 50;
+      const effectiveHeight = finalHeight - startY * 2;
+      const singleImageHeight = (effectiveHeight - imageGap * 2) / PHOTO_COUNT;
+
       imgElements.forEach((img, index) => {
         ctx.drawImage(
           img,
           edgePadding,
-          edgePadding + index * (singleImageHeight + imageGap),
+          startY + index * (singleImageHeight + imageGap),
           finalWidth - edgePadding * 2,
           singleImageHeight
         );
@@ -72,54 +75,61 @@ const PhotoResult: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-2xl font-bold mb-4">Your Photo Strip</h1>
-      <div className="mb-4 flex gap-2">
-        <button
-          onClick={() => setBackgroundColor('#FFFFFF')}
-          className="px-4 py-2 border rounded-lg bg-white"
-          title="White"
-        >
-          White
-        </button>
-        <button
-          onClick={() => setBackgroundColor('#000000')}
-          className="px-4 py-2 border rounded-lg bg-black text-white"
-          title="Black"
-        >
-          Black
-        </button>
-        <button
-          onClick={() => setBackgroundColor('#FFE4E1')}
-          className="px-4 py-2 border rounded-lg"
-          style={{ backgroundColor: '#FFE4E1' }}
-          title="Light Pink"
-        >
-          Pink
-        </button>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="flex gap-12">
+        {/* Left side - Photo strip */}
+        {mergedImage && (
+          <div className="h-[80vh]">
+            <img
+              src={mergedImage}
+              alt="Photo Strip"
+              className="h-full w-auto border rounded-lg shadow-lg"
+            />
+          </div>
+        )}
+
+        {/* Right side - Controls */}
+        <div className="flex flex-col justify-center gap-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setBackgroundColor('#FFFFFF')}
+              className="px-4 py-2 border rounded-lg bg-white"
+              title="White"
+            >
+              White
+            </button>
+            <button
+              onClick={() => setBackgroundColor('#000000')}
+              className="px-4 py-2 border rounded-lg bg-black text-white"
+              title="Black"
+            >
+              Black
+            </button>
+            <button
+              onClick={() => setBackgroundColor('#FFE4E1')}
+              className="px-4 py-2 border rounded-lg"
+              style={{ backgroundColor: '#FFE4E1' }}
+              title="Light Pink"
+            >
+              Pink
+            </button>
+          </div>
+
+          <button
+            onClick={downloadImage}
+            className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg"
+          >
+            Download Photo Strip
+          </button>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-2 bg-gray-600 text-white font-bold rounded-lg"
+          >
+            Retake Photos
+          </button>
+        </div>
       </div>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
-      {mergedImage && (
-        <div className="max-h-[80vh] overflow-auto">
-          <img
-            src={mergedImage}
-            alt="Photo Strip"
-            className="border rounded-lg shadow-lg max-w-full h-auto"
-          />
-        </div>
-      )}
-      <button
-        onClick={downloadImage}
-        className="mt-4 px-6 py-2 bg-blue-600 text-white font-bold rounded-lg"
-      >
-        Download Photo Strip
-      </button>
-      <button
-        onClick={() => navigate('/')}
-        className="mt-2 px-6 py-2 bg-gray-600 text-white font-bold rounded-lg"
-      >
-        Retake Photos
-      </button>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { PHOTO_COUNT, PHOTO_INTERVAL } from '../../config/photoBoothConfig';
 const PhotoBooth: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -14,7 +14,7 @@ const PhotoBooth: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (photos.length === 3) {
+    if (photos.length === PHOTO_COUNT) {
       setTimeout(() => {
         navigate('/result', { state: { photos } });
       }, 1000);
@@ -27,7 +27,7 @@ const PhotoBooth: React.FC = () => {
         getCameras();
         navigator.mediaDevices.addEventListener('devicechange', getCameras);
         if (selectedCamera) {
-          startCamera(selectedCamera); // ✅ Ensure camera starts immediately
+          startCamera(selectedCamera);
         }
       }
     });
@@ -54,7 +54,6 @@ const PhotoBooth: React.FC = () => {
 
   const requestCameraPermission = async () => {
     try {
-      // Request permissions explicitly before accessing the camera
       await navigator.mediaDevices.getUserMedia({ video: true });
       console.log('Camera permission granted!');
       return true;
@@ -134,8 +133,8 @@ const PhotoBooth: React.FC = () => {
 
   const startPhotoSequence = () => {
     setIsProcessing(true);
-    let photosRemaining = 3;
-    let currentCountdown = 1;
+    let photosRemaining = PHOTO_COUNT;
+    let currentCountdown = PHOTO_INTERVAL;
 
     const takePhoto = () => {
       setIsFlashing(true);
@@ -146,7 +145,7 @@ const PhotoBooth: React.FC = () => {
 
       if (photosRemaining > 0) {
         setTimeout(() => {
-          currentCountdown = 1;
+          currentCountdown = PHOTO_INTERVAL;
           setCountdown(currentCountdown);
 
           const countdownInterval = setInterval(() => {
@@ -222,13 +221,15 @@ const PhotoBooth: React.FC = () => {
       </div>
 
       {/* Right side - Captured photos */}
-      <div className="w-1/4 flex flex-col justify-center items-center overflow-hidden">
-        <div className="w-full aspect-video grid grid-rows-4 gap-1">
+      <div className="relative w-1/4 flex flex-col justify-center items-center overflow-hidden p-4 shadow-[10px_10px_20px_#14161d,-10px_-10px_20px_#282c39]">
+        <div
+          className={`w-full aspect-video grid grid-rows-${PHOTO_COUNT} gap-4`}
+        >
           {photos.map((src, index) => (
             <img
               key={index}
               src={src}
-              className="w-full h-full object-cover rounded-lg"
+              className="w-full h-full object-cover rounded-xl shadow-inner"
               alt="Captured"
             />
           ))}
