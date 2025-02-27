@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { PHOTO_COUNT } from '../config/photoBoothConfig';
+import { PHOTO_COUNT } from '../config/PhotoBoothConfig';
 
 const PhotoResult: React.FC = () => {
   const location = useLocation();

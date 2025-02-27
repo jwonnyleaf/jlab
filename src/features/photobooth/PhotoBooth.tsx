@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PHOTO_COUNT, PHOTO_INTERVAL } from '../../config/photoBoothConfig';
+import { PHOTO_COUNT, PHOTO_INTERVAL } from '../../config/PhotoBoothConfig';
 const PhotoBooth: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
