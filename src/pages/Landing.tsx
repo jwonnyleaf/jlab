@@ -17,7 +17,7 @@ const Landing = () => {
           />
         </div>
       </div>
-      <div className="absolute top-[76%] w-full flex items-center">
+      <div className="absolute top-[74%] w-full flex items-center">
         <Link to="/photobooth">
           <motion.button
             className="text-burple font-libre text-[clamp(1rem,1.5vw,1.5rem)]"

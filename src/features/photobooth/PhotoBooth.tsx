@@ -1,17 +1,31 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePhotoBoothContext } from '../../contexts/PhotoBoothContext';
 import { PHOTO_COUNT, PHOTO_INTERVAL } from '../../config/PhotoBoothConfig';
+
 const PhotoBooth: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [photos, setPhotos] = useState<string[]>([]);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const {
+    photos,
+    setPhotos,
+    stream,
+    setStream,
+    selectedCamera,
+    setSelectedCamera,
+  } = usePhotoBoothContext();
+
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
-  const [selectedCamera, setSelectedCamera] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    audioRef.current = new Audio('/src/assets/sounds/effects/shutter.mp3');
+  }, []);
 
   useEffect(() => {
     if (photos.length === PHOTO_COUNT) {
@@ -55,11 +69,8 @@ const PhotoBooth: React.FC = () => {
   const requestCameraPermission = async () => {
     try {
       await navigator.mediaDevices.getUserMedia({ video: true });
-      console.log('Camera permission granted!');
       return true;
     } catch (error) {
-      console.error('Camera permission denied:', error);
-      alert('Please allow camera access to use the photo booth.');
       return false;
     }
   };
@@ -69,32 +80,23 @@ const PhotoBooth: React.FC = () => {
       const hasPermission = await requestCameraPermission();
       if (!hasPermission) return;
 
-      if (videoRef.current?.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach((track) => track.stop());
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const newStream = await navigator.mediaDevices.getUserMedia({
         video: {
           deviceId: deviceId ? { exact: deviceId } : undefined,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          aspectRatio: { exact: 16 / 9 },
+          frameRate: { ideal: 30, max: 60 },
+          width: { ideal: 1280, min: 640, max: 1920 },
+          height: { ideal: 720, min: 480, max: 1080 },
+          aspectRatio: 16 / 9,
         },
       });
 
+      setStream(newStream);
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        const videoTrack = stream.getVideoTracks()[0];
-        const capabilities = videoTrack.getCapabilities();
-        if (capabilities.width && capabilities.height) {
-          const settings = {
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            aspectRatio: { exact: 16 / 9 },
-          };
-          await videoTrack.applyConstraints(settings);
-        }
+        videoRef.current.srcObject = newStream;
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
@@ -111,11 +113,8 @@ const PhotoBooth: React.FC = () => {
       return;
     }
 
-    // Set canvas size to match video dimensions
     canvasRef.current.width = videoRef.current.videoWidth;
     canvasRef.current.height = videoRef.current.videoHeight;
-
-    // Draw the video frame onto the canvas
     ctx.drawImage(
       videoRef.current,
       0,
@@ -126,7 +125,7 @@ const PhotoBooth: React.FC = () => {
 
     const imageData = canvasRef.current.toDataURL('image/png');
     setPhotos((prev) => {
-      const newPhotos = prev.length < 4 ? [...prev, imageData] : prev;
+      const newPhotos = prev.length < PHOTO_COUNT ? [...prev, imageData] : prev;
       return newPhotos;
     });
   };
@@ -140,6 +139,7 @@ const PhotoBooth: React.FC = () => {
       setIsFlashing(true);
       setTimeout(() => setIsFlashing(false), 200);
 
+      audioRef.current?.play();
       capturePhoto();
       photosRemaining--;
 
@@ -176,65 +176,84 @@ const PhotoBooth: React.FC = () => {
     }, 1000);
   };
 
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, []);
+
   return (
-    <div className="flex h-screen w-screen p-8 gap-8">
-      <div className="flex-1 flex flex-col gap-4">
-        <div className="relative h-[70vh] flex flex-col justify-center items-center">
+    <div className="flex h-full w-full gap-1">
+      <div className="relative flex w-full h-full flex-col gap-1">
+        <div className="relative min-h-[75vh] max-h-[75vh] flex flex-col rounded-xl bg-dark-neutral justify-center items-center">
           <video
             ref={videoRef}
             autoPlay
-            className="w-full h-full object-cover rounded-xl shadow-lg"
+            className="w-full h-full object-cover rounded-xl shadow-lg transform scale-x-[-1]"
           />
           {isFlashing && (
-            <div className="absolute inset-0 bg-white opacity-50 animate-flash" />
+            <div className="absolute inset-0 bg-white opacity-75 animate-flash rounded-xl" />
           )}
-          {countdown !== null && (
+          {countdown !== null && countdown > 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-white text-9xl font-bold drop-shadow-lg">
+              <span className="text-white text-[clamp(4rem,12vw,12rem)] font-bold drop-shadow-lg">
                 {countdown}
               </span>
             </div>
           )}
+          <div className="absolute bottom-1 left-1 right-1 h-12 bg-black/50 p-2 flex justify-between items-center rounded-xl">
+            <select
+              value={selectedCamera}
+              onChange={(e) => {
+                const newDeviceID = e.target.value;
+                setSelectedCamera(newDeviceID);
+              }}
+              className="text-white p-2"
+            >
+              {cameras.map((camera) => (
+                <option key={camera.deviceId} value={camera.deviceId}>
+                  {camera.label || `Camera ${cameras.indexOf(camera) + 1}`}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={isProcessing ? undefined : startPhotoSequence}
             disabled={isProcessing}
-            className={`absolute right-8 w-18 h-18 bg-transparent border-4 border-white rounded-full flex justify-center items-center ${
-              isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+            className={`absolute right-8 w-[clamp(3rem,4vw,4.5rem)] h-[clamp(3rem,4vw,4.5rem)] bg-transparent border-4 border-white rounded-full flex justify-center items-center ${
+              isProcessing
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:scale-105 transition-transform'
             }`}
           >
-            <div className="absolute w-14 h-14 bg-white rounded-full" />
+            <div className="absolute w-[80%] h-[80%] bg-white rounded-full" />
           </button>
         </div>
-        <div className="flex-grow">
-          <select
-            value={selectedCamera}
-            onChange={(e) => setSelectedCamera(e.target.value)}
-            className="z-10 bg-white/80 backdrop-blur-sm rounded-lg px-4 py-2"
-          >
-            {cameras.map((camera) => (
-              <option key={camera.deviceId} value={camera.deviceId}>
-                {camera.label || `Camera ${cameras.indexOf(camera) + 1}`}
-              </option>
+        <div className="w-full h-full flex gap-2 bg-dark-neutral p-1 rounded-xl overflow-hidden">
+          {Array(PHOTO_COUNT)
+            .fill(null)
+            .map((_, index) => (
+              <div
+                key={index}
+                className={`flex-1 min-w-0 h-full rounded-lg shadow-md ${
+                  !photos[index] ? 'bg-gray opacity-50' : ''
+                }`}
+              >
+                {photos[index] && (
+                  <img
+                    src={photos[index]}
+                    className="w-full h-full object-cover rounded-lg"
+                    alt="Captured"
+                  />
+                )}
+              </div>
             ))}
-          </select>
         </div>
       </div>
 
-      {/* Right side - Captured photos */}
-      <div className="relative w-1/4 flex flex-col justify-center items-center overflow-hidden p-4 shadow-[10px_10px_20px_#14161d,-10px_-10px_20px_#282c39]">
-        <div
-          className={`w-full aspect-video grid grid-rows-${PHOTO_COUNT} gap-4`}
-        >
-          {photos.map((src, index) => (
-            <img
-              key={index}
-              src={src}
-              className="w-full h-full object-cover rounded-xl shadow-inner"
-              alt="Captured"
-            />
-          ))}
-        </div>
-      </div>
+      <div className="relative w-1/3 flex flex-col justify-center items-center overflow-hidden bg-neutral rounded-xl p-4"></div>
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
     </div>

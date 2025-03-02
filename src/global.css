@@ -4,7 +4,14 @@
 @theme {
   --font-fjalla: 'Fjalla One', sans-serif;
   --font-libre: 'Libre Baskerville', serif;
-  --color-raisinblack: #1e212b;
+  --color-white: #ffffff;
+  --color-neutral: #46606b;
+  --color-neutral-dark: #324045;
+  --color-neutral-light: #4a6067;
+  --color-dark-neutral: #20292c;
+  --color-bittersweet: #ff715b;
+  --color-gray: #6f787b;
+  --color-jet: #2a2b2a;
   --color-powder: #fdfffc;
   --color-pink: #ffe4dc;
   --color-burple: #a2a4ef;
@@ -31,15 +38,6 @@ body {
   height: 100%;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
   display: flex;
@@ -52,25 +50,6 @@ h1 {
   line-height: 1.1;
 }
 
-.custom-shadow {
-  border-radius: 54px;
-  background: #1e212b;
-  box-shadow: 10px 10px 20px #14161d, -10px -10px 20px #282c39 !important;
-}
-
 button {
   cursor: pointer;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }

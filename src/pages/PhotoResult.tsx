@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { PHOTO_COUNT } from '../config/PhotoBoothConfig';
+import { usePhotoBoothContext } from '../contexts/PhotoBoothContext';
 
 const PhotoResult: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mergedImage, setMergedImage] = useState<string | null>(null);
   const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
 
-  const photos: string[] = location.state?.photos || [];
+  const { photos, setPhotos } = usePhotoBoothContext();
 
   useEffect(() => {
     if (photos.length !== PHOTO_COUNT) {
-      navigate('/'); // Redirect if no valid photos
+      navigate('/photobooth');
       return;
     }
 
@@ -122,7 +122,10 @@ const PhotoResult: React.FC = () => {
             Download Photo Strip
           </button>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              navigate('/photobooth');
+              setTimeout(() => setPhotos([]), 0);
+            }}
             className="px-6 py-2 bg-gray-600 text-white font-bold rounded-lg"
           >
             Retake Photos
